@@ -349,7 +349,7 @@
     return a;
   }
 
-  /// Where this visitor should end up.
+  /// The https store address, for the buttons.
   ///
   /// Android gets the Play Store with `referrer`, which the Play Install
   /// Referrer API hands to the app on first launch — so on Android the code
@@ -357,7 +357,7 @@
   /// carries nothing from a store install into the app. The friend recovers
   /// the code from the message that brought them here, which is why the share
   /// text puts the code before the link (design 5.7).
-  function storeDestination(code) {
+  function webStoreURL(code) {
     if (isAndroid() && PLAY_STORE_URL) {
       if (!code) { return PLAY_STORE_URL; }
       var join = PLAY_STORE_URL.indexOf("?") === -1 ? "?" : "&";
@@ -374,14 +374,49 @@
     return null;
   }
 
+  /// The same destination, in the store app's own scheme.
+  ///
+  /// **Why this exists.** Tapping an apps.apple.com link opens the App Store
+  /// app, because Apple registers that domain for universal links. A redirect
+  /// made by *script* does not get that treatment — iOS keeps it in the
+  /// browser, and the visitor lands on the App Store web page instead of the
+  /// app. `itms-apps://` has no such condition, and `market://` is the same
+  /// story on Android. `market://` carries `referrer` exactly as the https
+  /// form does, so nothing is lost.
+  ///
+  /// Derived from the https address rather than written out a second time:
+  /// two copies of a store address is one wrong store address waiting.
+  /// Anything unparseable falls back to https, which is merely worse, never
+  /// broken.
+  function storeAppURL(webURL) {
+    if (!webURL) { return null; }
+
+    var appleId = /\/id(\d+)/.exec(webURL);
+    if (appleId) { return "itms-apps://apps.apple.com/app/id" + appleId[1]; }
+
+    var playId = /[?&]id=([^&]+)/.exec(webURL);
+    if (playId) {
+      var referrer = /[?&]referrer=([^&]+)/.exec(webURL);
+      return "market://details?id=" + playId[1] +
+        (referrer ? "&referrer=" + referrer[1] : "");
+    }
+
+    return webURL;
+  }
+
   /// `replace`, not `assign`: the back button then returns to the chat the
   /// link was tapped in, where the code is still on screen. An extra history
   /// entry would put this page in the way of the one thing the friend needs
   /// to go back for.
+  ///
+  /// If the store app's scheme goes nowhere — an in-app browser that blocks
+  /// custom schemes, or a device with the store restricted — nothing happens
+  /// and this page simply stays up, showing the code and a working button.
+  /// That is the reason the page is painted before this runs.
   function redirect(code) {
-    var destination = storeDestination(code);
-    if (!destination) { return false; }
-    window.location.replace(destination);
+    var web = webStoreURL(code);
+    if (!web) { return false; }
+    window.location.replace(storeAppURL(web) || web);
     return true;
   }
 
@@ -428,6 +463,9 @@
     }
 
     var stores = document.getElementById("stores");
+    // The buttons stay https. A tap gets the universal-link treatment that a
+    // scripted redirect does not, and https is the only form a desktop
+    // browser can follow at all.
     var androidFirst = isAndroid();
     var buttons = [];
 
