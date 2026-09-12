@@ -176,7 +176,8 @@
 (function () {
   "use strict";
 
-  // This page never asks whether a code is real. It has no network access at
+  // This page sends the visitor to the right store for their platform, and
+  // shows the invite while it does. It never asks whether a code is real. It has no network access at
   // all, by construction: no fetch, no XHR, no image beacon. It is the one
   // unauthenticated surface in the whole feature, and a page that answered
   // "does this code exist?" would be a code-checking oracle, and every rate
@@ -348,6 +349,42 @@
     return a;
   }
 
+  /// Where this visitor should end up.
+  ///
+  /// Android gets the Play Store with `referrer`, which the Play Install
+  /// Referrer API hands to the app on first launch — so on Android the code
+  /// fills itself in and nobody types anything. iOS has no equivalent: Apple
+  /// carries nothing from a store install into the app. The friend recovers
+  /// the code from the message that brought them here, which is why the share
+  /// text puts the code before the link (design 5.7).
+  function storeDestination(code) {
+    if (isAndroid() && PLAY_STORE_URL) {
+      if (!code) { return PLAY_STORE_URL; }
+      var join = PLAY_STORE_URL.indexOf("?") === -1 ? "?" : "&";
+      return PLAY_STORE_URL + join + "referrer=" + encodeURIComponent(code);
+    }
+    if (isAndroid()) {
+      // Android app is not published yet; there is nowhere to send them.
+      return null;
+    }
+    if (isApple()) { return APP_STORE_URL; }
+    // A desktop visitor has no store that can install this app, so sending
+    // them to one serves nobody and costs them sight of the code. They keep
+    // the page.
+    return null;
+  }
+
+  /// `replace`, not `assign`: the back button then returns to the chat the
+  /// link was tapped in, where the code is still on screen. An extra history
+  /// entry would put this page in the way of the one thing the friend needs
+  /// to go back for.
+  function redirect(code) {
+    var destination = storeDestination(code);
+    if (!destination) { return false; }
+    window.location.replace(destination);
+    return true;
+  }
+
   function render() {
     var t = STRINGS[pickLanguage()];
     var code = readCode();
@@ -429,6 +466,12 @@
   }
 
   render();
+
+  // Painted first, then redirected. The page stays the fallback for every
+  // case the redirect cannot serve — no Play Store address yet, JavaScript
+  // off, an in-app browser that blocks navigation — and in those cases it is
+  // the whole experience, not a flash.
+  redirect(readCode());
 })();
 </script>
 </body>
