@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Invite URLs must never be indexed: each one is somebody's personal code. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Verbi</title>
+<meta name="description" content="You have been invited to Verbi, the app that turns your recordings into text in seconds.">
+<!-- Link previews in Messages and WhatsApp read these. They cannot be
+     localised (crawlers send no useful Accept-Language) and must never carry
+     the code, so they stay one neutral English sentence. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="You are invited to Verbi">
+<meta property="og:description" content="Turn your recordings into text in seconds. Open this page for your invite code.">
+<meta name="twitter:card" content="summary">
+<style>
+  /* Design 8.6 tokens, with three deliberate departures.
+     The app accepts two sub-AA contrasts (D-13) because reworking a shipped
+     palette was out of scope; a brand-new page has no such excuse, so every
+     text pair here clears WCAG AA 4.5:1. Measured:
+
+       copy + secondary button   #5B4FD6 on #FFFFFF  5.94:1
+                                 #A99BFF on #1C1C1E  7.15:1
+       step number bubble        #FFFFFF on #5B4FD6  5.94:1
+                                 #1C1C1E on #A99BFF  7.23:1
+       primary button, both ends #FFFFFF on #7B2FFF  5.69:1
+                                 #FFFFFF on #1F6AE0  5.00:1
+       body text, light          #6C6C70 on #F2F2F7  4.69:1
+       body text, dark           #8E8E93 on #000000  6.44:1
+       the code itself           18.82:1 / 21.00:1
+
+     What that cost: the app's #6B5FFF accent is 4.46:1 on white and 3.81:1 on
+     a dark card, so it became #5B4FD6 / #A99BFF for anything that is text or
+     carries a number. The gradient's blue end #2F80FF gave white 16px text
+     only 3.72:1, so it ends at #1F6AE0 here. #6B5FFF still fills the brand
+     mark via the gradient, so the token itself is gone from this page. */
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --text: #000000;
+    --text-2: #6C6C70;
+    --hairline: #E5E5EA;
+    --accent: #5B4FD6;       /* every text colour and the step bubbles */
+    --on-accent: #FFFFFF;    /* the step number, which sits on --accent */
+    --grad-a: #7B2FFF;
+    --grad-b: #1F6AE0;
+    --code-bg: #F2F2F7;
+    --shadow: 0 6px 12px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1C1C1E;
+      --text: #FFFFFF;
+      --text-2: #8E8E93;
+      --hairline: #3A3A3C;
+      --code-bg: #000000;
+      --shadow: none;
+      --accent: #A99BFF;
+      /* The dark accent is a light purple, so the number on it goes dark.
+         Leaving it white was 2.38:1 and unreadable. */
+      --on-accent: #1C1C1E;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.47 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 16px 40px;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 420px; }
+  .brand {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin: 8px 0 28px;
+  }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+    display: flex; align-items: center; justify-content: center;
+    color: #FFF; font-weight: 700; font-size: 19px; line-height: 1;
+  }
+  .brand-name { font-size: 20px; font-weight: 700; letter-spacing: -.2px; }
+  h1 {
+    font-size: 26px; line-height: 1.25; font-weight: 700;
+    letter-spacing: -.4px; margin: 0 0 8px; text-align: center;
+  }
+  .lede { color: var(--text-2); margin: 0 0 24px; text-align: center; font-size: 16px; }
+  .card {
+    background: var(--card); border-radius: 16px; padding: 20px;
+    box-shadow: var(--shadow); margin-bottom: 16px;
+  }
+  .code-label {
+    font-size: 12px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--text-2); text-align: center;
+    margin-bottom: 12px;
+  }
+  .code {
+    font: 700 34px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 5px; text-align: center; color: var(--text);
+    background: var(--code-bg); border: 1px solid var(--hairline);
+    border-radius: 12px; padding: 16px 12px 16px 17px;
+    word-break: break-all;
+  }
+  .copy {
+    width: 100%; margin-top: 12px; padding: 13px 16px;
+    font: 600 16px/1 inherit; font-family: inherit;
+    color: var(--accent); background: transparent;
+    border: 1px solid var(--hairline); border-radius: 12px;
+    cursor: pointer; min-height: 44px;
+  }
+  .copy:active { opacity: .6; }
+  .copy[data-done="1"] { color: var(--text-2); }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  ol li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 0; counter-increment: step;
+  }
+  ol li::before {
+    content: counter(step);
+    flex: 0 0 24px; height: 24px; margin-top: 1px;
+    background: var(--accent); color: var(--on-accent); border-radius: 50%;
+    font-size: 13px; font-weight: 700; line-height: 24px; text-align: center;
+  }
+  .stores { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .store {
+    display: block; text-align: center; text-decoration: none;
+    padding: 15px 18px; border-radius: 14px; font-weight: 600; font-size: 16px;
+    min-height: 44px;
+  }
+  .store.primary { background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color: #FFF; }
+  .store.secondary { background: var(--card); color: var(--accent); border: 1px solid var(--hairline); }
+  .soon {
+    text-align: center; color: var(--text-2); font-size: 15px;
+    padding: 14px 10px 4px;
+  }
+  .fine { color: var(--text-2); font-size: 13px; text-align: center; margin: 22px 0 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">V</span>
+    <span class="brand-name">Verbi</span>
+  </div>
+
+  <h1 id="headline"></h1>
+  <p class="lede" id="lede"></p>
+
+  <div class="card" id="code-card" hidden>
+    <div class="code-label" id="code-label"></div>
+    <div class="code" id="code"></div>
+    <button class="copy" id="copy" type="button"></button>
+  </div>
+
+  <div class="card" id="steps-card">
+    <ol>
+      <li id="step-1"></li>
+      <li id="step-2"></li>
+      <li id="step-3"></li>
+    </ol>
+  </div>
+
+  <div class="stores" id="stores"></div>
+  <p class="soon" id="soon" hidden></p>
+  <p class="fine" id="fine"></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // This page never asks whether a code is real. It has no network access at
+  // all, by construction: no fetch, no XHR, no image beacon. It is the one
+  // unauthenticated surface in the whole feature, and a page that answered
+  // "does this code exist?" would be a code-checking oracle, and every rate
+  // limit that protects the real check lives behind an authenticated call
+  // that this page cannot make (D-44, PRD US-9.3). Format is the only thing
+  // checked here, and only so that a mistyped link degrades to a tidy page
+  // instead of showing garbage.
+
+  var APP_STORE_URL = "https://apps.apple.com/app/verbi/id6752242891";
+  // Empty until the Android app ships. An empty string hides the button
+  // rather than rendering a dead one (PRD US-9.2).
+  var PLAY_STORE_URL = "";
+
+  // codes.py: 31 characters, 0/O and 1/I deliberately absent.
+  var ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  var CODE_LENGTH = 6;
+
+  var STRINGS = {
+    tr: {
+      headline: "Verbi'ye davet edildin",
+      lede: "Kayıtlarını saniyeler içinde yazıya döken uygulama.",
+      codeLabel: "Davet kodu",
+      copy: "Kodu kopyala",
+      copied: "Kopyalandı",
+      s1: "Verbi'yi indir.",
+      s2: "İlk kaydını tamamlamadan önce bu kodu gir.",
+      s3: "3 gün Premium senin olur.",
+      ios: "App Store'dan indir",
+      android: "Google Play'den indir",
+      soon: "Android sürümü çok yakında.",
+      fine: "Kod, uygulamayı ilk kez kuranlar için geçerlidir.",
+      noCode: "Verbi'yi indir",
+      noCodeLede: "Kayıtlarını saniyeler içinde yazıya döken uygulama.",
+      title: "Verbi'ye davet edildin"
+    },
+    en: {
+      headline: "You are invited to Verbi",
+      lede: "The app that turns your recordings into text in seconds.",
+      codeLabel: "Invite code",
+      copy: "Copy code",
+      copied: "Copied",
+      s1: "Get Verbi.",
+      s2: "Type this code before you finish your first recording.",
+      s3: "You get 3 days of Premium.",
+      ios: "Download on the App Store",
+      android: "Get it on Google Play",
+      soon: "The Android version is coming very soon.",
+      fine: "The code works for people installing the app for the first time.",
+      noCode: "Get Verbi",
+      noCodeLede: "The app that turns your recordings into text in seconds.",
+      title: "You are invited to Verbi"
+    },
+    de: {
+      headline: "Du bist zu Verbi eingeladen",
+      lede: "Die App, die deine Aufnahmen in Sekunden in Text verwandelt.",
+      codeLabel: "Einladungscode",
+      copy: "Code kopieren",
+      copied: "Kopiert",
+      s1: "Verbi holen.",
+      s2: "Gib diesen Code ein, bevor du deine erste Aufnahme abschließt.",
+      s3: "Du bekommst 3 Tage Premium.",
+      ios: "Im App Store laden",
+      android: "Bei Google Play",
+      soon: "Die Android-Version kommt in Kürze.",
+      fine: "Der Code gilt für Personen, die die App zum ersten Mal installieren.",
+      noCode: "Verbi holen",
+      noCodeLede: "Die App, die deine Aufnahmen in Sekunden in Text verwandelt.",
+      title: "Du bist zu Verbi eingeladen"
+    },
+    fr: {
+      headline: "Tu es invité à rejoindre Verbi",
+      lede: "L'app qui transforme tes enregistrements en texte en quelques secondes.",
+      codeLabel: "Code d'invitation",
+      copy: "Copier le code",
+      copied: "Copié",
+      s1: "Installe Verbi.",
+      s2: "Saisis ce code avant de terminer ton premier enregistrement.",
+      s3: "Tu reçois 3 jours de Premium.",
+      ios: "Télécharger dans l'App Store",
+      android: "Disponible sur Google Play",
+      soon: "La version Android arrive très bientôt.",
+      fine: "Le code est valable pour une première installation de l'app.",
+      noCode: "Installe Verbi",
+      noCodeLede: "L'app qui transforme tes enregistrements en texte en quelques secondes.",
+      title: "Tu es invité à rejoindre Verbi"
+    },
+    es: {
+      headline: "Te han invitado a Verbi",
+      lede: "La app que convierte tus grabaciones en texto en segundos.",
+      codeLabel: "Código de invitación",
+      copy: "Copiar código",
+      copied: "Copiado",
+      s1: "Instala Verbi.",
+      s2: "Escribe este código antes de terminar tu primera grabación.",
+      s3: "Consigues 3 días de Premium.",
+      ios: "Descargar en el App Store",
+      android: "Disponible en Google Play",
+      soon: "La versión para Android llega muy pronto.",
+      fine: "El código sirve para quien instala la app por primera vez.",
+      noCode: "Instala Verbi",
+      noCodeLede: "La app que convierte tus grabaciones en texto en segundos.",
+      title: "Te han invitado a Verbi"
+    }
+  };
+
+  function pickLanguage() {
+    var wanted = (navigator.languages && navigator.languages.length)
+      ? navigator.languages
+      : [navigator.language || "en"];
+    for (var i = 0; i < wanted.length; i++) {
+      var tag = String(wanted[i] || "").toLowerCase().split("-")[0];
+      if (STRINGS[tag]) { return tag; }
+    }
+    return "en";
+  }
+
+  /// The code, from wherever the link happened to put it.
+  ///
+  /// `?c=` is the shape the app builds. The other two are read as well
+  /// because a shared invite outlives every deploy: a link sitting in
+  /// somebody's chat history from a year ago has to keep working even if the
+  /// page moves hosts.
+  function readCode() {
+    var candidates = [];
+    var query = /[?&]c=([^&]+)/.exec(window.location.search);
+    if (query) { candidates.push(decodeURIComponent(query[1])); }
+    if (window.location.hash.length > 1) {
+      candidates.push(decodeURIComponent(window.location.hash.slice(1)));
+    }
+    var segments = window.location.pathname.split("/").filter(Boolean);
+    if (segments.length) { candidates.push(segments[segments.length - 1]); }
+
+    for (var i = 0; i < candidates.length; i++) {
+      var code = normalise(candidates[i]);
+      if (isWellFormed(code)) { return code; }
+    }
+    return null;
+  }
+
+  function normalise(raw) {
+    return String(raw || "").trim().toUpperCase().replace(/[\s-]/g, "");
+  }
+
+  function isWellFormed(code) {
+    if (code.length !== CODE_LENGTH) { return false; }
+    for (var i = 0; i < code.length; i++) {
+      if (ALPHABET.indexOf(code[i]) === -1) { return false; }
+    }
+    return true;
+  }
+
+  function isAndroid() {
+    return /android/i.test(navigator.userAgent);
+  }
+
+  function isApple() {
+    var ua = navigator.userAgent;
+    if (/iphone|ipad|ipod/i.test(ua)) { return true; }
+    // iPadOS reports itself as a Mac; a touch-capable "Mac" is an iPad.
+    return /macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+  }
+
+  function storeButton(href, label, primary) {
+    var a = document.createElement("a");
+    a.className = "store " + (primary ? "primary" : "secondary");
+    a.href = href;
+    a.rel = "noopener";
+    a.textContent = label;
+    return a;
+  }
+
+  function render() {
+    var t = STRINGS[pickLanguage()];
+    var code = readCode();
+
+    document.documentElement.lang = pickLanguage();
+    document.title = code ? t.title : "Verbi";
+
+    document.getElementById("headline").textContent = code ? t.headline : t.noCode;
+    document.getElementById("lede").textContent = code ? t.lede : t.noCodeLede;
+    document.getElementById("fine").textContent = code ? t.fine : "";
+
+    if (code) {
+      document.getElementById("code-card").hidden = false;
+      document.getElementById("code-label").textContent = t.codeLabel;
+      document.getElementById("code").textContent = code;
+
+      var button = document.getElementById("copy");
+      button.textContent = t.copy;
+      button.addEventListener("click", function () {
+        copy(code, function () {
+          button.textContent = t.copied;
+          button.setAttribute("data-done", "1");
+        });
+      });
+    }
+
+    // Step 2 is the load-bearing sentence on this page: installing from a
+    // store loses whatever was in the link, so the friend has to carry the
+    // code across by hand. That is also why there is no deferred deep link
+    // to build (D-44).
+    //
+    // With no code there is nothing to carry across and no reward to promise,
+    // so the numbered list goes away entirely rather than counting down to a
+    // step the visitor cannot take.
+    if (code) {
+      document.getElementById("step-1").textContent = t.s1;
+      document.getElementById("step-2").textContent = t.s2;
+      document.getElementById("step-3").textContent = t.s3;
+    } else {
+      document.getElementById("steps-card").hidden = true;
+    }
+
+    var stores = document.getElementById("stores");
+    var androidFirst = isAndroid();
+    var buttons = [];
+
+    if (PLAY_STORE_URL) {
+      buttons.push({ el: storeButton(APP_STORE_URL, t.ios, !androidFirst), android: false });
+      buttons.push({ el: storeButton(PLAY_STORE_URL, t.android, androidFirst), android: true });
+      if (androidFirst) { buttons.reverse(); }
+      buttons.forEach(function (b) { stores.appendChild(b.el); });
+    } else {
+      stores.appendChild(storeButton(APP_STORE_URL, t.ios, true));
+      var soon = document.getElementById("soon");
+      soon.textContent = t.soon;
+      soon.hidden = false;
+    }
+  }
+
+  function copy(text, done) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+      return;
+    }
+    fallbackCopy(text, done);
+  }
+
+  function fallbackCopy(text, done) {
+    var field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    field.setSelectionRange(0, text.length);
+    try { document.execCommand("copy"); done(); } catch (e) { /* the code is on screen anyway */ }
+    document.body.removeChild(field);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
