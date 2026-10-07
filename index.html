@@ -189,10 +189,17 @@
   // checked here, and only so that a mistyped link degrades to a tidy page
   // instead of showing garbage.
 
-  var APP_STORE_URL = "https://apps.apple.com/app/verbi/id6752242891";
-  // Empty until the Android app ships. An empty string hides the button
-  // rather than rendering a dead one (PRD US-9.2).
-  var PLAY_STORE_URL = "";
+  // App Store Connect's campaign provider token (`pt`). Empty until the
+  // founder creates one; while it is empty the store address below stays
+  // exactly as shipped and nothing is measured. The same constant lives in
+  // the app (`AppStoreLink.providerToken`) and on the website (`PT`).
+  var APP_STORE_PROVIDER_TOKEN = "";
+  var APP_STORE_URL = campaignStoreURL("https://apps.apple.com/app/verbi/id6752242891", readSource());
+  // The Play listing (D-82; Android 1.0.0 is in production). `referrer` is
+  // appended per visit, code first, so the Android app fills the code in on
+  // first launch. Keep the empty-string behaviour: it hides the button rather
+  // than rendering a dead one (PRD US-9.2), should the listing ever go away.
+  var PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.monurilgaz.verbi";
 
   // codes.py: 31 characters, 0/O and 1/I deliberately absent.
   var ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -207,7 +214,7 @@
       copied: "Kopyalandı",
       s1: "Verbi'yi indir.",
       s2: "İlk kaydını tamamlamadan önce bu kodu gir.",
-      s3: "3 gün Premium senin olur.",
+      s3: "7 gün Premium senin olur.",
       ios: "App Store'dan indir",
       android: "Google Play'den indir",
       soon: "Android sürümü çok yakında.",
@@ -224,7 +231,7 @@
       copied: "Copied",
       s1: "Get Verbi.",
       s2: "Type this code before you finish your first recording.",
-      s3: "You get 3 days of Premium.",
+      s3: "You get 7 days of Premium.",
       ios: "Download on the App Store",
       android: "Get it on Google Play",
       soon: "The Android version is coming very soon.",
@@ -241,7 +248,7 @@
       copied: "Kopiert",
       s1: "Verbi holen.",
       s2: "Gib diesen Code ein, bevor du deine erste Aufnahme abschließt.",
-      s3: "Du bekommst 3 Tage Premium.",
+      s3: "Du bekommst 7 Tage Premium.",
       ios: "Im App Store laden",
       android: "Bei Google Play",
       soon: "Die Android-Version kommt in Kürze.",
@@ -258,7 +265,7 @@
       copied: "Copié",
       s1: "Installe Verbi.",
       s2: "Saisis ce code avant de terminer ton premier enregistrement.",
-      s3: "Tu reçois 3 jours de Premium.",
+      s3: "Tu reçois 7 jours de Premium.",
       ios: "Télécharger dans l'App Store",
       android: "Disponible sur Google Play",
       soon: "La version Android arrive très bientôt.",
@@ -275,7 +282,7 @@
       copied: "Copiado",
       s1: "Instala Verbi.",
       s2: "Escribe este código antes de terminar tu primera grabación.",
-      s3: "Consigues 3 días de Premium.",
+      s3: "Consigues 7 días de Premium.",
       ios: "Descargar en el App Store",
       android: "Disponible en Google Play",
       soon: "La versión para Android llega muy pronto.",
@@ -324,6 +331,50 @@
     return String(raw || "").trim().toUpperCase().replace(/[\s-]/g, "");
   }
 
+  /// `?src=` names the surface that produced this link — `export` for the
+  /// signature at the end of a shared transcript — so its installs can be
+  /// told apart in the stores' reports. Letters, digits and dashes only;
+  /// anything else is dropped rather than forwarded into a store URL.
+  function readSource() {
+    var match = /[?&]src=([^&]+)/.exec(window.location.search);
+    if (!match) { return ""; }
+    var source = decodeURIComponent(match[1]).toLowerCase().replace(/[^a-z0-9-]/g, "");
+    return source.slice(0, 32);
+  }
+
+  /// The campaign name both stores report under: `invite`, or `invite-<src>`.
+  function campaignName(source) {
+    return source ? "invite-" + source : "invite";
+  }
+
+  /// The App Store address with Apple's campaign parameters, or the plain
+  /// address while no provider token is configured — the same constant and
+  /// the same fallback as `AppStoreLink.swift`. Derived from the plain
+  /// address so the app id is written once.
+  function campaignStoreURL(plainURL, source) {
+    if (!APP_STORE_PROVIDER_TOKEN) { return plainURL; }
+    var appleId = /\/id(\d+)/.exec(plainURL);
+    if (!appleId) { return plainURL; }
+    return "https://apps.apple.com/app/apple-store/id" + appleId[1] +
+      "?pt=" + encodeURIComponent(APP_STORE_PROVIDER_TOKEN) +
+      "&ct=" + encodeURIComponent(campaignName(source)) + "&mt=8";
+  }
+
+  /// The Play Install Referrer value: the code first, so the app's parser
+  /// finds it whatever follows, then the campaign in the utm shape Play's
+  /// own reports read. One value, because Play hands the app exactly one.
+  function playReferrer(code, source) {
+    var parts = [];
+    if (code) { parts.push("referrer=" + code); }
+    parts.push("utm_source=" + campaignName(source));
+    return parts.join("&");
+  }
+
+  function playStoreURL(code) {
+    var join = PLAY_STORE_URL.indexOf("?") === -1 ? "?" : "&";
+    return PLAY_STORE_URL + join + "referrer=" + encodeURIComponent(playReferrer(code, readSource()));
+  }
+
   function isWellFormed(code) {
     if (code.length !== CODE_LENGTH) { return false; }
     for (var i = 0; i < code.length; i++) {
@@ -362,12 +413,10 @@
   /// text puts the code before the link (design 5.7).
   function webStoreURL(code) {
     if (isAndroid() && PLAY_STORE_URL) {
-      if (!code) { return PLAY_STORE_URL; }
-      var join = PLAY_STORE_URL.indexOf("?") === -1 ? "?" : "&";
-      return PLAY_STORE_URL + join + "referrer=" + encodeURIComponent(code);
+      return playStoreURL(code);
     }
     if (isAndroid()) {
-      // Android app is not published yet; there is nowhere to send them.
+      // No Play address configured; there is nowhere to send them.
       return null;
     }
     if (isApple()) { return APP_STORE_URL; }
@@ -395,7 +444,13 @@
     if (!webURL) { return null; }
 
     var appleId = /\/id(\d+)/.exec(webURL);
-    if (appleId) { return "itms-apps://apps.apple.com/app/id" + appleId[1]; }
+    if (appleId) {
+      // A campaign address keeps its query, so the scripted redirect is
+      // counted the same way a tapped button is.
+      var query = webURL.indexOf("?") === -1 ? "" : webURL.slice(webURL.indexOf("?"));
+      if (query) { return "itms-apps://apps.apple.com/app/apple-store/id" + appleId[1] + query; }
+      return "itms-apps://apps.apple.com/app/id" + appleId[1];
+    }
 
     var playId = /[?&]id=([^&]+)/.exec(webURL);
     if (playId) {
@@ -474,7 +529,9 @@
 
     if (PLAY_STORE_URL) {
       buttons.push({ el: storeButton(APP_STORE_URL, t.ios, !androidFirst), android: false });
-      buttons.push({ el: storeButton(PLAY_STORE_URL, t.android, androidFirst), android: true });
+      // The button carries the same referrer as the redirect, so a visitor
+      // who lands on a desktop and taps Play later still arrives with the code.
+      buttons.push({ el: storeButton(playStoreURL(code), t.android, androidFirst), android: true });
       if (androidFirst) { buttons.reverse(); }
       buttons.forEach(function (b) { stores.appendChild(b.el); });
     } else {
