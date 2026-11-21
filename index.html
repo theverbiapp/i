@@ -6,13 +6,13 @@
 <!-- Invite URLs must never be indexed: each one is somebody's personal code. -->
 <meta name="robots" content="noindex, nofollow">
 <title>Verbi</title>
-<meta name="description" content="You have been invited to Verbi, the app that turns your recordings into text in seconds.">
+<meta name="description" content="Verbi, the app that turns your recordings into text in seconds.">
 <!-- Link previews in Messages and WhatsApp read these. They cannot be
      localised (crawlers send no useful Accept-Language) and must never carry
      the code, so they stay one neutral English sentence. -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="You are invited to Verbi">
-<meta property="og:description" content="Turn your recordings into text in seconds. Open this page for your invite code.">
+<meta property="og:title" content="Get Verbi">
+<meta property="og:description" content="Turn your recordings into text in seconds.">
 <meta name="twitter:card" content="summary">
 <style>
   /* Design 8.6 tokens, with three deliberate departures.
@@ -204,6 +204,11 @@
   // codes.py: 31 characters, 0/O and 1/I deliberately absent.
   var ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   var CODE_LENGTH = 6;
+  // Invite-a-friend was switched off on 2026-11-21 (D-278). Links already
+  // shared keep opening this page, so it stays up as a plain download page:
+  // no code card, no steps, no reward promise. Set to true only together
+  // with the `referral_enabled` Remote Config switch.
+  var INVITES_OPEN = false;
 
   var STRINGS = {
     tr: {
@@ -480,7 +485,7 @@
 
   function render() {
     var t = STRINGS[pickLanguage()];
-    var code = readCode();
+    var code = INVITES_OPEN ? readCode() : "";
 
     document.documentElement.lang = pickLanguage();
     document.title = code ? t.title : "Verbi";
